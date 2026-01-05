@@ -4,6 +4,7 @@ import torch
 from pathlib import Path
 from typing import List, Tuple
 from ..model.base import GPTModern
+from ..model.lora import apply_lora, LoraConfig
 from ..data.collators import SFTCollator
 
 class LengthCurriculum:
@@ -33,7 +34,10 @@ def train_sft(
     lr: float = 3e-4,
     device: str = 'cpu',
     bpe_dir: str | None = None,
-    checkpoint: str | None = None
+    checkpoint: str | None = None,
+    use_lora: bool = False,
+    lora_rank: int = 8,
+    lora_alpha: float = 16.0
 ):
     device = torch.device(device)
     print(f"Starting SFT training on {device}...")
@@ -50,7 +54,18 @@ def train_sft(
     if checkpoint:
         print(f"Using model config from checkpoint {checkpoint}")
         ckpt = torch.load(checkpoint, map_location=device)
+        ckpt = torch.load(checkpoint, map_location=device)
         model.load_state_dict(ckpt['model'])
+
+    if use_lora:
+        print(f"Applying LoRA (rank={lora_rank}, alpha={lora_alpha})...")
+        lcfg = LoraConfig(rank=lora_rank, alpha=lora_alpha, dropout=0.05)
+        apply_lora(model, lcfg)
+        # Note: apply_lora freezes base parameters and enables grad on lora_ params
+        # Count trainable params
+        n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        n_all = sum(p.numel() for p in model.parameters())
+        print(f"LoRA applied. Trainable params: {n_train:,} / {n_all:,} ({n_train/n_all:.2%})")
 
     opt = torch.optim.AdamW(model.parameters(), lr=lr, betas=(0.9, 0.95), weight_decay=0.1)
     model.train()
@@ -102,6 +117,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', type=str, default='runs/sft')
     parser.add_argument('--steps', type=int, default=200)
+    parser.add_argument('--use_lora', action='store_true')
+    parser.add_argument('--lora_rank', type=int, default=8)
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--cpu', action='store_true')
     # Dummy data loader for CLI test
@@ -114,6 +131,8 @@ if __name__ == "__main__":
         items=dummy_data,
         out_dir=args.out,
         steps=args.steps,
+        use_lora=args.use_lora,
+        lora_rank=args.lora_rank,
         batch_size=args.batch_size,
         device='cpu' if args.cpu else ('cuda' if torch.cuda.is_available() else 'cpu')
     )

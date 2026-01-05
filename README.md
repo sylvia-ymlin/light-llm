@@ -32,6 +32,16 @@ data = [("Instruction", "Response")] * 100
 train_sft(items=data, out_dir="runs/sft_demo", steps=10)
 ```
 
+### LoRA Fine-Tuning
+
+To fine-tune efficiently using Low-Rank Adaptation (LoRA):
+
+```bash
+# Via CLI
+python -m llm_scratch.training.sft --use_lora --lora_rank 8 --steps 100
+```
+
+
 ### Reinforcement Learning (RLHF)
 
 Requires a trained SFT checkpoint and a Reward Model checkpoint.
