@@ -59,6 +59,12 @@ To make your resume/report pop, run these specific experiments and plot the resu
 ### Q4: How did you handle the key-value cache?
 **A:** "I maintained a pre-allocated tensor for `K` and `V` states. At each generation step, I only computed the attention for the *new* token, appended it to the cache, and attended to the full history. This turns the complexity from $O(T^2)$ to $O(T)$ per token. In my benchmarks, this resulted in a **8x speedup** (80 tok/s vs 10 tok/s) for 200-token sequences."
 
+### Q5: Did you use Mixed Precision Training?
+**A:** "Yes, I implemented `torch.amp.autocast` with `GradScaler` to train in FP16/BF16. This reduced memory bandwidth pressure and accelerated math operations on the tensor cores (or equivalent on MPS), allowing for larger batch sizes without OOM."
+
+### Q6: How do you prevent reward hacking in RLHF?
+**A:** "In my GRPO implementation, I calculate the KL Divergence between the current policy $\pi_\theta$ and the reference SFT model $\pi_{ref}$. This term is added to the loss as a penalty $\beta D_{KL}(\pi_\theta || \pi_{ref})$. If the model deviates too far from the reference (i.e., outputs 'gibberish' that tricks the reward model), the KL penalty spikes, pulling the policy back towards the safe language distribution."
+
 ---
 
 ## 4. STAR Method (Behavioral)

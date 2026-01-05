@@ -70,6 +70,8 @@ def train_sft(
         print(f"LoRA applied. Trainable params: {n_train:,} / {n_all:,} ({n_train/n_all:.2%})")
 
     opt = torch.optim.AdamW(model.parameters(), lr=lr, betas=(0.9, 0.95), weight_decay=0.1)
+    # Use GradScaler for mixed precision (only needed for cuda usually, but good practice to have)
+    scaler = torch.cuda.amp.GradScaler(enabled=(device.type == 'cuda'))
     model.train()
     
     step = 0
@@ -83,12 +85,25 @@ def train_sft(
         xb, yb = col.collate(batch)
         xb, yb = xb.to(device), yb.to(device)
         
-        logits, loss, _ = model(xb, yb)
+        # Mixed Precision Context
+        dtype = torch.float16 if device.type == 'cuda' else torch.bfloat16 if device.type == 'cpu' else torch.float32
+        # MPS mixed precision is partial, usually handled by checking torch.backends.mps.is_available() for autocast?
+        # torch.autocast is the modern API.
+        
+        device_type = 'cuda' if device.type == 'cuda' else 'cpu'
+        # Note: torch.autocast for MPS exists in newer pytorch versions as device_type='mps'
+        if device.type == 'mps':
+            device_type = 'mps'
+            
+        with torch.amp.autocast(device_type=device_type, enabled=True):
+             logits, loss, _ = model(xb, yb)
         
         opt.zero_grad(set_to_none=True)
-        loss.backward()
+        scaler.scale(loss).backward()
+        scaler.unscale_(opt)
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-        opt.step()
+        scaler.step(opt)
+        scaler.update()
         
         step += 1
         i += batch_size
