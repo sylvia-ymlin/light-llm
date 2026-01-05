@@ -32,13 +32,15 @@ def train_sft(
     n_head: int = 4,
     n_embd: int = 256,
     lr: float = 3e-4,
-    device: str = 'cpu',
+    device: str | None = None,
     bpe_dir: str | None = None,
     checkpoint: str | None = None,
     use_lora: bool = False,
     lora_rank: int = 8,
     lora_alpha: float = 16.0
 ):
+    if device is None:
+        device = 'cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu')
     device = torch.device(device)
     print(f"Starting SFT training on {device}...")
     
@@ -134,5 +136,5 @@ if __name__ == "__main__":
         use_lora=args.use_lora,
         lora_rank=args.lora_rank,
         batch_size=args.batch_size,
-        device='cpu' if args.cpu else ('cuda' if torch.cuda.is_available() else 'cpu')
+        device='cpu' if args.cpu else ('cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu'))
     )
