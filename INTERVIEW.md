@@ -69,7 +69,7 @@ To make your resume/report pop, run these specific experiments and plot the resu
 
 ## 4. STAR Method (Behavioral)
 
-**Situation:** "I wanted to master LLM internals beyond just calling APIs."
-**Task:** "Build a complete training system including pre-training, SFT, and RLHF."
-**Action:** "I refactored a tutorial into a modular library. I debugged tensor shape mismatches in Multi-Head Attention and implemented LoRA from first principles to solve memory constraints."
-**Result:** "Created a reusable Python package `llm_scratch`. Deepened my understanding of CUDA memory management and alignment algorithms."
+**Situation:** "While implementing the custom Key-Value Cache to speed up inference, I ran into silent failures where the model output degraded into repetition after a few tokens, despite the code not throwing errors."
+**Task:** "I needed to identify if the issue was in the cache update logic, the positional embeddings (RoPE), or the attention mask, as all three interact closely during autoregressive generation."
+**Action:** "I stepped away from 'trial and error' and created a deterministic unit test. I compared the logits of my optimized cached implementation step-by-step against a naive 'forward-pass-all' baseline. Using the debugger, I inspected the tensor shapes and realized that when concatenating the new KV states, I was applying Rotary Embeddings *before* concatenation in a way that shifted the relative positions of valid history."
+**Result:** "I corrected the RoPE application order, which fixed the generation quality. This optimized implementation is what achieved the 7.7x speedup I benchmarked. The experience taught me the importance of 'invariant testing'—ensuring optimized code produces bit-exact results compared to a simple, correct baseline."
