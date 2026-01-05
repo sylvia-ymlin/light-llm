@@ -7,6 +7,9 @@ name = "llm_scratch"
 version = "0.1.0"
 description = "A clean, from-scratch implementation of an LLM with RLHF"
 readme = "README.md"
+authors = [
+  { name = "Your Name", email = "your.email@example.com" },
+]
 requires-python = ">=3.10"
 dependencies = [
     "torch>=2.0.0",

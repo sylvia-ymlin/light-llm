@@ -6,7 +6,7 @@ from ..model.base import GPTModern
 class PolicyWithValue(nn.Module):
     """Policy network = SFT LM + tiny value head.
     NOTE: For simplicity we place value head on top of LM logits (vocab→1).
-    This avoids depending on hidden-state internals while keeping the tutorial runnable.
+    This avoids depending on hidden-state internals.
     """
     def __init__(self, vocab_size: int, block_size: int, n_layer=4, n_head=4, n_embd=256,
                  use_rmsnorm=True, use_swiglu=True, rope=True, dropout=0.0):

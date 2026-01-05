@@ -2,8 +2,6 @@
 
 This project is a standalone implementation of a Large Language Model (LLM) including pre-training (SFT) and Reinforcement Learning from Human Feedback (RLHF) using GRPO.
 
-Is was refactored from a tutorial series into a cohesive Python package.
-
 ## Project Structure
 
 - `src/llm_scratch/`: Main package
