@@ -1,6 +1,16 @@
-# Interview Preparation Guide: End-to-End LLM System
+# Interview & Resume Guide: End-to-End LLM System
 
-## 1. The "Elevator Pitch" (2 Minutes)
+## 1. Resume / CV Entry (Data-Backed)
+
+**Project: End-to-End Large Language Model Implementation**
+*   **Core Architecture**: Designed and built a Llama 3-style decoder-only Transformer from scratch in PyTorch, implementing **RoPE** (Rotary Embeddings), **SwiGLU**, and **RMSNorm** to ensure state-of-the-art representational capacity.
+*   **Inference Optimization**: Engineered a custom **Key-Value (KV) Cache**, achieving a **7.7x speedup** (10 → 80 tokens/sec) in autoregressive generation on Apple M3 hardware.
+*   **Efficient Training**: Implemented **LoRA (Low-Rank Adaptation)** manually, reducing trainable parameters by **99.2%** (1.5M vs 190M) and optimizer memory overhead by **~1.4GB**, enabling fine-tuning on consumer hardware.
+*   **Alignment Pipeline**: Integrated a full RLHF system using **GRPO** (Group Relative Policy Optimization) to align the model with human preferences, validating the pipeline with a pairwise ranking reward model.
+
+---
+
+## 2. The "Elevator Pitch" (2 Minutes)
 
 "In my recent project, I built a modern Large Language Model training system from scratch in PyTorch to understand the engineering challenges behind models like Llama 3.
 
