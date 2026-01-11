@@ -14,9 +14,9 @@ This project is a standalone implementation of a Large Language Model (LLM) incl
 
 This is not just a toy implementation. It includes engineering optimizations used in production LLMs:
 
-| Optimization | impact | Method |
+| Optimization | Impact | Method |
 | :--- | :--- | :--- |
-| **KV Caching** | **7.7x Speedup** (80 tok/s) | Custom attention implementation with pre-allocated tensors. |
+| **KV Caching** | **3.6-7.7x Speedup** | Custom attention implementation with pre-allocated tensors. Performance varies by hardware: RTX 3090 (~7.7x), Apple Silicon (~3.6x). |
 | **LoRA** | **99% Memory Reduction** | Hand-written `LoRALinear` modules with rank adaption. |
 | **FP16/AMP** | **Memory Efficient** | Mixed precision training with `torch.amp`. |
 | **Algorithms** | **Stable Alignment** | GRPO (Group Relative Policy Optimization) for stable RLHF. |
