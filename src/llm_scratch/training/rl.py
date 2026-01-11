@@ -100,13 +100,17 @@ class RLHFTokenizer:
     def __init__(self, block_size: int, bpe_dir: str | None = None, vocab_size: int = 8000):
         self.block_size = block_size
         self.tok = None
-        try:
-            self.tok = BPETokenizer(vocab_size=vocab_size)
-            if bpe_dir:
+        
+        # Try BPE first, but handle failures gracefully
+        if bpe_dir:
+            try:
+                self.tok = BPETokenizer(vocab_size=vocab_size)
                 self.tok.load(bpe_dir)
-        except Exception:
-            self.tok = None
-            
+            except Exception:
+                print(f"Warning: Failed to load BPE tokenizer from {bpe_dir}, falling back to ByteTokenizer")
+                self.tok = None
+        
+        # Fallback to ByteTokenizer if BPE failed or not requested
         if self.tok is None:
             self.tok = ByteTokenizer()
 
@@ -115,9 +119,13 @@ class RLHFTokenizer:
         return getattr(self.tok, 'vocab_size', 256)
 
     def encode(self, text: str) -> List[int]:
+        if self.tok is None:
+            return list(text.encode('utf-8'))
         ids = self.tok.encode(text)
         if isinstance(ids, torch.Tensor):
             ids = ids.tolist()
+        elif hasattr(ids, 'ids'):  # BPE tokenizer result
+            ids = ids.ids
         return ids
 
     def decode(self, ids: List[int]) -> str:
@@ -127,11 +135,19 @@ class RLHFTokenizer:
 
 @torch.no_grad()
 def compute_reward(reward_model: RewardModel, tok: RLHFTokenizer, prompt_text: str, response_ids: list[int], device) -> float:
+    """Compute reward for a prompt-response pair using the trained reward model."""
     resp_text = tok.decode(response_ids)
     text = format_example(Example(prompt_text, resp_text))
     ids = tok.encode(text)
-    # truncate if needed, reward model handles max pos?
-    ids = ids[:tok.block_size] # simplistic clip
+    
+    # Truncate to model's block size
+    max_len = getattr(reward_model, 'block_size', tok.block_size)
+    ids = ids[:max_len]
+    
+    # Pad if necessary (pad token = 2)
+    if len(ids) < max_len:
+        ids = ids + [2] * (max_len - len(ids))
+    
     x = torch.tensor([ids], dtype=torch.long, device=device)
     r = reward_model(x)
     return float(r[0].item())
